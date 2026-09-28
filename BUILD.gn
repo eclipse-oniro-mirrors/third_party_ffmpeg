@@ -1269,7 +1269,7 @@ ohos_source_set("ffmpeg_dynamic") {
     # "//third_party/ffmpeg/libavformat/daudenc.c",
     # "//third_party/ffmpeg/libavformat/dcstr.c",
     # "//third_party/ffmpeg/libavformat/dfa.c",
-    # "//third_party/ffmpeg/libavformat/dsfdec.c",
+    "//third_party/ffmpeg/libavformat/dsfdec.c",
     # "//third_party/ffmpeg/libavformat/dsicin.c",
     # "//third_party/ffmpeg/libavformat/dss.c",
     "//third_party/ffmpeg/libavformat/dtsdec.c",
