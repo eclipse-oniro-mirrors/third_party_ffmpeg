@@ -159,6 +159,7 @@ config("ffmpeg_config") {
     "-DTARGET_CONFIG=\"config-arm64.h\"",
     "-Wno-macro-redefined",
     "-DCONFIG_H263_DECODER",
+    "-DCONFIG_WMV1_DECODER",
     "-DCONFIG_WMV3_DECODER",
     "-DCONFIG_H264_MUXER",
     "-DCONFIG_M4V_MUXER",
