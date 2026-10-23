@@ -11328,7 +11328,9 @@ static int mov_read_header(AVFormatContext *s)
 
                 sc->ambient = NULL;
             }
+#ifndef OHOS_AUXILIARY_TRACK
             break;
+#endif
         }
     }
     ff_configure_buffers_for_index(s, AV_TIME_BASE);
