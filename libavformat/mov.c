@@ -5528,7 +5528,11 @@ static int mov_read_trak(MOVContext *c, AVIOContext *pb, MOVAtom atom)
 
     // Here stsc refers to a chunk not described in stco. This is technically invalid,
     // but we can overlook it (clearing stsc) whenever stts_count == 0 (indicating no samples).
+#ifdef OHOS_OPT_COMPAT
+    if (!sc->chunk_count && sc->stsc_count && st->nb_frames == 0) {
+#else
     if (!sc->chunk_count && !sc->stts_count && sc->stsc_count) {
+#endif
         sc->stsc_count = 0;
         av_freep(&sc->stsc_data);
     }
