@@ -479,7 +479,9 @@ static int g726_decode_frame(AVCodecContext *avctx, AVFrame *frame,
         return ret;
     samples = (int16_t *)frame->data[0];
 
-    init_get_bits(&gb, buf, buf_size * 8);
+    ret = init_get_bits8(&gb, buf, buf_size);
+    if (ret < 0)
+        return ret;
 
     while (out_samples--)
         *samples++ = g726_decode(c, c->little_endian ?
