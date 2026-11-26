@@ -162,6 +162,34 @@ static void name(AVCodecContext *avctx, uint8_t * dst, const uint8_t *buf, int b
 MKSCALE16(scale16be, AV_RB16, AV_WB16)
 MKSCALE16(scale16le, AV_RL16, AV_WL16)
 
+/*
+ * Check whether the packet can be handled as a 1/2/4/8 bpp mono/pal8 frame.
+ * Returns 1 to take the 1_2_4_8_bpp path, 0 to take the generic path, or
+ * AVERROR_INVALIDDATA if the packet does not hold a full row of pixels.
+ */
+static int raw_check_1_2_4_8_bpp(AVCodecContext *avctx,
+                                 RawVideoContext *const context,
+                                 int stride, const AVPacket *avpkt)
+{
+    int bits;
+
+    if (!((avctx->bits_per_coded_sample == 8 || avctx->bits_per_coded_sample == 4 ||
+           avctx->bits_per_coded_sample == 2 || avctx->bits_per_coded_sample == 1 ||
+           (avctx->bits_per_coded_sample == 0 && (context->is_nut_pal8 || context->is_mono))) &&
+          (context->is_mono || context->is_pal8) &&
+          (!avctx->codec_tag || avctx->codec_tag == MKTAG('r','a','w',' ') ||
+           context->is_nut_mono || context->is_nut_pal8)))
+        return 0;
+
+    bits = context->is_mono ? 1 :
+           avctx->bits_per_coded_sample ? avctx->bits_per_coded_sample : 8;
+    if (stride < ((int64_t)avctx->width * bits + 7) / 8) {
+        av_log(avctx, AV_LOG_ERROR, "Packet too small (%d)\n", avpkt->size);
+        return AVERROR_INVALIDDATA;
+    }
+    return 1;
+}
+
 static int raw_decode(AVCodecContext *avctx, AVFrame *frame,
                       int *got_frame, AVPacket *avpkt)
 {
@@ -199,18 +227,11 @@ static int raw_decode(AVCodecContext *avctx, AVFrame *frame,
 
     desc = av_pix_fmt_desc_get(avctx->pix_fmt);
 
-    if ((avctx->bits_per_coded_sample == 8 || avctx->bits_per_coded_sample == 4 ||
-         avctx->bits_per_coded_sample == 2 || avctx->bits_per_coded_sample == 1 ||
-         (avctx->bits_per_coded_sample == 0 && (context->is_nut_pal8 || context->is_mono)) ) &&
-        (context->is_mono || context->is_pal8) &&
-        (!avctx->codec_tag || avctx->codec_tag == MKTAG('r','a','w',' ') ||
-                context->is_nut_mono || context->is_nut_pal8)) {
-        int bits = context->is_mono ? 1 :
-                   avctx->bits_per_coded_sample ? avctx->bits_per_coded_sample : 8;
-        if (stride < ((int64_t)avctx->width * bits + 7) / 8) {
-            av_log(avctx, AV_LOG_ERROR, "Packet too small (%d)\n", avpkt->size);
-            return AVERROR_INVALIDDATA;
-        }
+    res = raw_check_1_2_4_8_bpp(avctx, context, stride, avpkt);
+    if (res < 0)
+        return res;
+
+    if (res) {
         context->is_1_2_4_8_bpp = 1;
         if (context->is_mono) {
             int row_bytes = avctx->width / 8 + (avctx->width & 7 ? 1 : 0);
