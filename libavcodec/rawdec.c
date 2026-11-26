@@ -178,8 +178,9 @@ static int raw_check_1_2_4_8_bpp(AVCodecContext *avctx,
            (avctx->bits_per_coded_sample == 0 && (context->is_nut_pal8 || context->is_mono))) &&
           (context->is_mono || context->is_pal8) &&
           (!avctx->codec_tag || avctx->codec_tag == MKTAG('r','a','w',' ') ||
-           context->is_nut_mono || context->is_nut_pal8)))
+           context->is_nut_mono || context->is_nut_pal8))) {
         return 0;
+    }
 
     bits = context->is_mono ? 1 :
            avctx->bits_per_coded_sample ? avctx->bits_per_coded_sample : 8;
@@ -228,8 +229,9 @@ static int raw_decode(AVCodecContext *avctx, AVFrame *frame,
     desc = av_pix_fmt_desc_get(avctx->pix_fmt);
 
     res = raw_check_1_2_4_8_bpp(avctx, context, stride, avpkt);
-    if (res < 0)
+    if (res < 0) {
         return res;
+    }
 
     if (res) {
         context->is_1_2_4_8_bpp = 1;
@@ -253,8 +255,9 @@ static int raw_decode(AVCodecContext *avctx, AVFrame *frame,
     need_copy = !avpkt->buf || context->is_1_2_4_8_bpp || context->is_yuv2 || context->is_lt_16bpp;
 
     res = ff_decode_frame_props(avctx, frame);
-    if (res < 0)
+    if (res < 0) {
         return res;
+    }
 
     if (context->tff >= 0) {
         frame->flags |= AV_FRAME_FLAG_INTERLACED;
